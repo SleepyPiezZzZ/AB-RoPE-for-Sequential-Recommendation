@@ -41,6 +41,21 @@ conda env create -f environment.yaml
 conda activate abrope
 ```
 
+### Download Pre-trained Models (Required for Evaluation)
+To reproduce the results without training from scratch, you need to download the `result` folder containing the pre-trained checkpoints (`.pth`) and logs.
+
+1. **Download**: Access our Hugging Face repository [HERE](https://huggingface.co/riacano/ABRoPE) and download the `result/` folder.
+2. **Placement**: Ensure the `result` directory is placed in the project root:
+   ```text
+   AB-RoPE-for-Sequential-Recommendation/
+   ├── Main.py
+   ├── environment.yaml
+   └── result/               <-- Place the downloaded folder here
+       ├── exp_1/
+       ├── ...
+       └── exp_6/
+   ```
+   
 ---
 
 ## Dataset Preparation
