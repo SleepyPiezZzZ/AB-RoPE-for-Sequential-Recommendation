@@ -144,6 +144,7 @@ For visual analysis, refer to the following:
 ├── Model.py                    # Model architecture
 ├── Dataset.py                  # Data loading and preprocessing
 ├── Visualization.ipynb         # Notebook for plotting and gating analysis
+├── Config.py                   # Ablation experiments toggles
 ├── environment.yaml            # Conda environment configuration for reproducibility
 └── README.md                   # Project documentation and setup guide
 ```
