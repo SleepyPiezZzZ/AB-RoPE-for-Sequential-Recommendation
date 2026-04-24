@@ -11,6 +11,7 @@ from Dataset import *
 from Model import *
 from Config import *
 import torch.nn.functional as F
+import argparse
 
 def seed_everything(seed=42, deterministic=False):
     os.environ["PYTHONHASHSEED"] = str(seed)
@@ -94,7 +95,17 @@ def evaluate_hr_ndcg(model, data_loader, device, config, k=10):
     return hr, ndcg
 
 if __name__ == "__main__":
-    current_exp_id = 6
+    parser = argparse.ArgumentParser(description="AB-RoPE Sequential Recommendation Training & Inference")
+    parser.add_argument("--exp_id", type=int, default=6, help="Experiment ID: 1-6")
+    parser.add_argument("--inference_only", action="store_true", help="Set this flag to run evaluation only")
+    parser.add_argument("--ckpt_path", type=str, default="", help="Path to the checkpoint .pth file for inference")    
+    args = parser.parse_args()
+    
+    current_exp_id = args.exp_id
+    inference_only = args.inference_only
+
+    BEST_PATH = args.ckpt_path if args.ckpt_path else f"./result/exp_{current_exp_id}/best.pth"
+    
     config = AblationConfig(exp_id=current_exp_id)
     # 固定随机种子，方便复现结果
     seed = 42
@@ -117,6 +128,7 @@ if __name__ == "__main__":
     # 全量数据：
     # Total number of lines in the file: 100150807
     # user_num = 987793 item_num = 4162024
+    print("Loading data...")
     taobao_dataset = TaobaoDataset(
         config=config,
         file_path="./data/Taobao_User_Behavior/UserBehavior.parquet", # 替换 CSV 为 Parquet
@@ -282,12 +294,12 @@ if __name__ == "__main__":
     best_epoch = -1
 
     dataset_name = "Taobao"
-    run_name = str(int(time.time()))
-    save_dir = f"./result/HSTU_Taobao/{run_name}"
-    os.makedirs(save_dir, exist_ok=True)
-    log_file = os.path.join(save_dir, "log.txt")
-    latest_ckpt = os.path.join(save_dir, "latest.pth")
-    best_ckpt = os.path.join(save_dir, "best.pth")
+    # run_name = str(int(time.time()))
+    # save_dir = f"./result/exp_{current_exp_id}/{run_name}"
+    # os.makedirs(save_dir, exist_ok=True)
+    # log_file = os.path.join(save_dir, "log.txt")
+    # latest_ckpt = os.path.join(save_dir, "latest.pth")
+    # best_ckpt = os.path.join(save_dir, "best.pth")
 
     # 重新训练时可加载断点
     resume = False
@@ -302,9 +314,15 @@ if __name__ == "__main__":
         best_epoch = ckpt.get("best_epoch", -1)
         print(f"Resume from {resume_path}, start_epoch={start_epoch}")
 
-    BEST_PATH = "./result/HSTU_Taobao/1776459191/best.pth"
-    inference_only = False  # 设为 True 可直接评估（前提是已加载训练好的 checkpoint）
+    # BEST_PATH = "./result/HSTU_Taobao/1776459191/best.pth"
+    # inference_only = False  # 设为 True 可直接评估（前提是已加载训练好的 checkpoint）
     if not inference_only:
+        run_name = str(int(time.time()))
+        save_dir = f"./result/exp_{current_exp_id}/{run_name}"
+        os.makedirs(save_dir, exist_ok=True)
+        log_file = os.path.join(save_dir, "log.txt")
+        latest_ckpt = os.path.join(save_dir, "latest.pth")
+        best_ckpt = os.path.join(save_dir, "best.pth")
         # 消融
         if config.use_behavior_module:
             scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.5)
@@ -355,6 +373,18 @@ if __name__ == "__main__":
 
                 optimizer.zero_grad()
                 scaler.scale(loss).backward()
+                # DEBUG
+                if step == total_steps: # 每 100 步打印一次，避免刷屏
+                    for name, param in model.named_parameters():
+                        if "type_rope_scale" in name:
+                            if param.grad is not None:
+                                # 使用 scaler 缩放后的梯度需要除以 scale 才是真实梯度
+                                # 或者简单点直接看这个值是否为 0
+                                gnorm = param.grad.norm().item()
+                                print(f"DEBUG: {name} grad norm: {gnorm:.10f}")
+                            else:
+                                print(f"DEBUG: {name} has NO gradient (None)!")
+                # ----------------------------
                 scaler.step(optimizer)
                 scaler.update()
 

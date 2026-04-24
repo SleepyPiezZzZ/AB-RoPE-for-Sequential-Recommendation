@@ -1,0 +1,25 @@
+name: abrope
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - numpy=1.26.4
+  - pandas
+  - matplotlib
+  - seaborn
+  - scipy
+  - pyyaml
+  - ipykernel
+  - tqdm
+  - pip:
+      - torch==2.5.1+cu121
+      - torchvision==0.20.1+cu121
+      - torchaudio==2.5.1+cu121
+      - pyarrow
+      - fastparquet
+      - triton
+      - scikit-learn

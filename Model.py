@@ -266,7 +266,7 @@ class SequentialTransductionUnit(nn.Module):
 
         # 消融，排除Exp 1
         if self.config.use_rab and self.rab is not None and ts is not None:
-            attn_logits = attn_logits + 2.0 * self.rab(ts, ts)
+            attn_logits = attn_logits + 2.0 * self.rab(ts, ts) if self.config.use_behavior_module else attn_logits + self.rab(ts, ts)
 
         if self.config.use_behavior_module and type_pair_bias is not None:
             attn_logits = attn_logits + self.rab_scale * type_pair_bias if hasattr(self, "rab_scale") else attn_logits + type_pair_bias
