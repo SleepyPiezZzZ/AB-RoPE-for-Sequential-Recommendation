@@ -118,7 +118,6 @@ For visual analysis, refer to the following:
 
 ## Repository Structure
 
-Plaintext
 
 ```
 ├── data/
